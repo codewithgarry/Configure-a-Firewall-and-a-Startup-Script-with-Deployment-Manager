@@ -52,7 +52,10 @@ projects/{{ env["project"] }}/global/networks/default
       accessConfigs:
       - name: External NAT
         type: ONE_TO_ONE_NAT
+***********************************************************************************
+**********Deploying requirements: type the following in Cloud Shell----------->>>>>>
 
+gcloud deployment-manager deployments create deployment-templates --config qwiklabs.yaml
 
 #################################################################################################################################
 qwiklabs.yaml - No Change
