@@ -1,0 +1,11 @@
+# Copyright 2016 Google Inc. All rights reserved.
+# Licensed under the Apache License, Version 2.0.
+
+imports:
+- path: qwiklabs.jinja
+
+resources:
+- name: qwiklabs
+  type: qwiklabs.jinja
+  properties:
+    zone: us-central1-a

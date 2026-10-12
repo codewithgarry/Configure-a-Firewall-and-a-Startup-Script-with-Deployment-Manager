@@ -1,59 +1,76 @@
-# Configure-a-Firewall-and-a-Startup-Script-with-Deployment-Manager
+# Configure a Firewall and a Startup Script with Deployment Manager (GSP302)
 
-###################################################################################################################
-Google cloud deployment-manager documentation - https://cloud.google.com/
-deployment-manager/docs/quickstart
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?logo=googlecloud&logoColor=white)
+![Lab](https://img.shields.io/badge/Lab-GSP302-34A853)
+![IaC](https://img.shields.io/badge/IaC-Deployment_Manager-orange)
 
-################################################################################################################### 
-****************qwiklabs.jinja***************
+Reference solution for the Google Cloud challenge lab **Configure a Firewall and a Startup Script with Deployment Manager** (GSP302).
 
-resources:
-- type: compute.v1.firewall
-  name: tcp-firewall-rule
-  properties:
-    network: https://www.googleapis.com/compute/v1/
-projects/{{ env["project"] }}/global/networks/default
-    sourceRanges: ["0.0.0.0/0"]
-    targetTags: ['http']
-    allowed:
-     - IPProtocol: TCP
-       ports: ["80"]
-- type: compute.v1.instance
-  name: vm-test
-  properties:
-    zone: {{ properties['zone'] }}
-    machineType: https://www.googleapis.com/compute/v1/
-projects/{{ env['project'] }}/zones/{{ properties['zone'] }}
-/machineTypes/f1-micro
-    tags:
-     items: ['http']
-    metadata:
-      items:
-      # For more ways to use startup scripts on an instance, see:
-      #   https://cloud.google.com/compute/docs...
-      - key: startup-script
-        value: |
-          #!/bin/bash
-          apt-get update
-          apt-get install -y apache2
-    disks:
-    - deviceName: boot
-      type: PERSISTENT
-      boot: true
-      autoDelete: true
-      initializeParams:
-        diskName: disk-{{ env["deployment"] }}
-        sourceImage: https://www.googleapis.com/compute/v1/
-projects/debian-cloud/global/images/family/debian-9
-    networkInterfaces:
-    - network: https://www.googleapis.com/compute/v1/
-projects/{{ env["project"] }}/global/networks/default
-      # Access Config required to give the instance a public IP address
-      accessConfigs:
-      - name: External NAT
-        type: ONE_TO_ONE_NAT
+## 📖 Overview
 
+You complete a Deployment Manager template so that one deployment creates:
 
-###############################################################################################################################
-qwiklabs.yaml - No Change
-qwiklabs.jinja.scheme- No Change
+- A Compute Engine VM that installs **Apache** with a startup script.
+- A firewall rule that allows **HTTP (tcp/80)** to instances tagged `http`.
+
+## 🧰 Services used
+
+Cloud Deployment Manager · Compute Engine · VPC firewall rules
+
+## 📁 Repository structure
+
+```text
+.
+├── README.md
+├── qwiklabs.jinja   # completed template: VM + startup script + firewall rule
+└── qwiklabs.yaml    # deployment config (unchanged from the lab)
+```
+
+## 🚀 Solution
+
+### 1. Get the lab files
+
+```bash
+mkdir deployment_manager && cd deployment_manager
+gsutil cp gs://spls/gsp302/* .
+```
+
+### 2. Replace the template
+
+Replace the contents of `qwiklabs.jinja` with [`qwiklabs.jinja`](qwiklabs.jinja) from this repo. Leave `qwiklabs.yaml` and `qwiklabs.jinja.schema` unchanged.
+
+### 3. Deploy
+
+```bash
+gcloud deployment-manager deployments create deployment-templates --config qwiklabs.yaml
+```
+
+### 4. Verify
+
+```bash
+gcloud compute instances list
+curl http://$(gcloud compute instances describe vm-test --zone us-central1-a \
+  --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
+```
+
+You should see the Apache default page.
+
+## 🔎 Version notes
+
+- Deployment Manager is deprecated in favour of **Infrastructure Manager** and **Terraform**.
+- The original lab used the `debian-9` image family, which is retired. The template uses `debian-11`.
+
+---
+
+## ⚠️ Notes
+
+- Resource names, zones, regions and ports are generated per lab session. Always use the values shown in **your** lab instructions.
+- These steps were written when the lab was live. Google revises labs over time, so the current version may differ.
+
+## 📌 Disclaimer
+
+This repository is a study reference. Attempt the lab on your own first, then compare approaches. It is not affiliated with or endorsed by Google.
+
+## 👤 Author
+
+**Girish Sharma** · Cloud & DevOps Engineer · [GitHub](https://github.com/codewithgarry) · [LinkedIn](https://www.linkedin.com/in/codewithgarry/)

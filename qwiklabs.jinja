@@ -1,0 +1,45 @@
+resources:
+- type: compute.v1.instance
+  name: vm-test
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    tags:
+      items:
+      - http
+    metadata:
+      items:
+      # Installs Apache on first boot.
+      # See https://cloud.google.com/compute/docs/instances/startup-scripts
+      - key: startup-script
+        value: |
+          #!/bin/bash
+          apt-get update
+          apt-get install -y apache2
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        diskName: disk-{{ env["deployment"] }}
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-11
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/global/networks/default
+      # Access config gives the instance a public IP address.
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+
+- type: compute.v1.firewall
+  name: default-allow-http
+  properties:
+    network: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/global/networks/default
+    targetTags:
+    - http
+    allowed:
+    - IPProtocol: tcp
+      ports:
+      - "80"
+    sourceRanges:
+    - 0.0.0.0/0
